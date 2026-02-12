@@ -51,6 +51,8 @@
 
 ### 启用写入模式（谨慎使用）
 
+**读写模式（不能删除）：**
+
 ```json
 {
   "mcpServers": {
@@ -64,7 +66,29 @@
         "--user", "dev_user",
         "--password", "dev_password",
         "--database", "dev_database",
-        "--danger-allow-write"
+        "--permission-mode", "readwrite"
+      ]
+    }
+  }
+}
+```
+
+**完全控制模式（危险！）：**
+
+```json
+{
+  "mcpServers": {
+    "mysql-dev": {
+      "command": "npx",
+      "args": [
+        "universal-db-mcp",
+        "--type", "mysql",
+        "--host", "localhost",
+        "--port", "3306",
+        "--user", "dev_user",
+        "--password", "dev_password",
+        "--database", "dev_database",
+        "--permission-mode", "full"
       ]
     }
   }
@@ -255,7 +279,7 @@
         "--user", "dev_user",
         "--password", "dev_password",
         "--database", "DEVDB",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -404,7 +428,7 @@ npm install -g dmdb
         "--user", "sa",
         "--password", "YourPassword123",
         "--database", "MyDatabase",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -535,7 +559,7 @@ npm install -g dmdb
         "--user", "dev_user",
         "--password", "dev_password",
         "--database", "development",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -639,13 +663,13 @@ db.users.find({"age": {"$gt": 18}})
 - `distinct` - 获取字段的不同值
 - `aggregate` - 聚合管道查询
 
-#### 写入操作（需要 --danger-allow-write）
+#### 写入操作（需要 --permission-mode readwrite 或 full）
 - `insert` / `insertOne` - 插入单个文档
 - `insertMany` - 插入多个文档
 - `update` / `updateOne` - 更新单个文档
 - `updateMany` - 更新多个文档
-- `delete` / `deleteOne` - 删除单个文档
-- `deleteMany` - 删除多个文档
+- `delete` / `deleteOne` - 删除单个文档（需要 delete 权限）
+- `deleteMany` - 删除多个文档（需要 delete 权限）
 
 ### 注意事项
 
@@ -724,7 +748,7 @@ db.users.find({"age": {"$gt": 18}})
         "universal-db-mcp",
         "--type", "sqlite",
         "--file", "/path/to/dev.db",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -864,7 +888,7 @@ Claude 会:
         "--user", "system",
         "--password", "your_password",
         "--database", "mydb",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -1013,7 +1037,7 @@ Claude 会（在写入模式下）:
         "--user", "gaussdb",
         "--password", "your_password",
         "--database", "mydb",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -1186,7 +1210,7 @@ Claude 会:
         "--user", "root@test",
         "--password", "your_password",
         "--database", "mydb",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -1359,7 +1383,7 @@ Claude 会:
         "--user", "root",
         "--password", "your_password",
         "--database", "mydb",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -1534,7 +1558,7 @@ Claude 会:
         "--user", "default",
         "--password", "your_password",
         "--database", "analytics",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -1736,7 +1760,7 @@ ClickHouse 作为列式 OLAP 数据库，有许多特色功能：
         "--user", "your_username",
         "--password", "your_password",
         "--database", "your_database",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -1758,7 +1782,7 @@ ClickHouse 作为列式 OLAP 数据库，有许多特色功能：
         "--user", "your_username",
         "--password", "your_password",
         "--database", "your_database",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     },
     "polardb-readonly": {
@@ -1959,7 +1983,7 @@ PolarDB 作为云原生数据库，有许多特色功能：
         "--user", "vastbase",
         "--password", "your_password",
         "--database", "mydb",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -2167,7 +2191,7 @@ Vastbase 作为国产数据库，有一些特色功能：
         "--user", "highgo",
         "--password", "your_password",
         "--database", "mydb",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -2376,7 +2400,7 @@ HighGo 作为国产数据库，有一些特色功能：
         "--user", "root",
         "--password", "your_password",
         "--database", "mydb",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -2715,7 +2739,7 @@ Claude 会:
 Claude 会:
 1. 查找所有 session: 开头的键
 2. 检查 TTL
-3. 在写入模式下执行清理（需要 --danger-allow-write）
+3. 在写入模式下执行清理（需要 --permission-mode readwrite 或 full）
 ```
 
 ---
@@ -2724,14 +2748,15 @@ Claude 会:
 
 ### ✅ 推荐做法
 
-1. **生产环境只读**: 生产数据库永远不要启用 `--danger-allow-write`
-2. **使用专用账号**: 为 MCP 创建权限受限的数据库账号
-3. **网络隔离**: 通过 VPN 或跳板机访问生产数据库
-4. **审计日志**: 定期检查 Claude Desktop 的操作日志
+1. **生产环境只读**: 生产数据库使用默认的 `safe` 模式
+2. **按需授权**: 使用 `--permission-mode readwrite` 允许读写但禁止删除
+3. **使用专用账号**: 为 MCP 创建权限受限的数据库账号
+4. **网络隔离**: 通过 VPN 或跳板机访问生产数据库
+5. **审计日志**: 定期检查 Claude Desktop 的操作日志
 
 ### ❌ 避免做法
 
-1. 不要在生产环境启用写入模式
+1. 不要在生产环境启用 `--permission-mode full`
 2. 不要使用 root 或 admin 账号
 3. 不要在公共网络直接连接数据库
 4. 不要在配置文件中明文存储密码（考虑使用环境变量）
@@ -2764,8 +2789,10 @@ Claude 会:
 **错误**: `操作被拒绝：当前处于只读安全模式`
 
 **解决方案**:
-- 这是安全特性，如需写入，添加 `--danger-allow-write` 参数
-- 仅在开发环境使用！
+- 这是安全特性，根据需要选择合适的权限模式：
+  - `--permission-mode readwrite` - 允许读写但禁止删除
+  - `--permission-mode full` - 完全控制（仅开发环境使用！）
+  - `--permissions read,insert,update` - 自定义权限组合
 
 ---
 

@@ -272,7 +272,7 @@ export class DatabaseService {
    * Validate query against write permissions
    */
   private validateQuery(query: string): void {
-    validateQuery(query, this.config.allowWrite ?? false);
+    validateQuery(query, this.config);
   }
 
   /**

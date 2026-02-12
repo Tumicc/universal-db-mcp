@@ -245,11 +245,50 @@ See [Dify Integration Guide](./docs/integrations/DIFY.md) for detailed setup ins
 
 By default, Universal DB MCP runs in **read-only mode**, blocking all write operations (INSERT, UPDATE, DELETE, DROP, etc.).
 
-To enable write operations (use with caution!):
+### Permission Modes
+
+Fine-grained permission control is supported for flexible configuration:
+
+| Mode | Allowed Operations | Description |
+|------|-------------------|-------------|
+| `safe` (default) | SELECT | Read-only, safest |
+| `readwrite` | SELECT, INSERT, UPDATE | Read/write but no delete |
+| `full` | All operations | Full control (dangerous!) |
+| `custom` | Custom combination | Specify via `--permissions` |
+
+**Permission Types:**
+- `read` - SELECT queries (always included)
+- `insert` - INSERT, REPLACE
+- `update` - UPDATE
+- `delete` - DELETE, TRUNCATE
+- `ddl` - CREATE, ALTER, DROP, RENAME
+
+**Usage Examples:**
 
 ```bash
---danger-allow-write
+# Read-only mode (default)
+npx universal-db-mcp --type mysql ...
+
+# Read/write but no delete
+npx universal-db-mcp --type mysql --permission-mode readwrite ...
+
+# Custom: only read and insert
+npx universal-db-mcp --type mysql --permissions read,insert ...
+
+# Full control (equivalent to --danger-allow-write)
+npx universal-db-mcp --type mysql --permission-mode full ...
 ```
+
+**Permission Configuration by Transport:**
+
+> ⚠️ Different transports use different parameter naming conventions!
+
+| Transport | Parameter Location | Permission Mode | Custom Permissions |
+|-----------|-------------------|-----------------|-------------------|
+| STDIO (Claude Desktop) | CLI args | `--permission-mode` | `--permissions` |
+| SSE (Dify, etc.) | URL Query | `permissionMode` | `permissions` |
+| Streamable HTTP | HTTP Header | `X-DB-Permission-Mode` | `X-DB-Permissions` |
+| REST API | JSON Body | `permissionMode` | `permissions` |
 
 **Best Practices:**
 - Never enable write mode in production

@@ -3,7 +3,6 @@
 </p>
 
 <h1 align="center">Universal DB MCP</h1>
-
 <p align="center">
   <strong>用自然语言连接 AI 与你的数据库</strong>
 </p>
@@ -245,11 +244,50 @@ POST http://localhost:3000/mcp
 
 默认情况下，Universal DB MCP 运行在**只读模式**，会阻止所有写操作（INSERT、UPDATE、DELETE、DROP 等）。
 
-如需启用写操作（请谨慎使用！）：
+### 权限模式
+
+支持细粒度权限控制，可根据需求灵活配置：
+
+| 模式 | 允许的操作 | 说明 |
+|------|-----------|------|
+| `safe`（默认） | SELECT | 只读，最安全 |
+| `readwrite` | SELECT, INSERT, UPDATE | 读写但不能删除 |
+| `full` | 所有操作 | 完全控制（危险！） |
+| `custom` | 自定义组合 | 通过 `--permissions` 指定 |
+
+**权限类型：**
+- `read` - SELECT 查询（始终包含）
+- `insert` - INSERT, REPLACE
+- `update` - UPDATE
+- `delete` - DELETE, TRUNCATE
+- `ddl` - CREATE, ALTER, DROP, RENAME
+
+**使用示例：**
 
 ```bash
---danger-allow-write
+# 只读模式（默认）
+npx universal-db-mcp --type mysql ...
+
+# 读写但不能删除
+npx universal-db-mcp --type mysql --permission-mode readwrite ...
+
+# 自定义：只允许读和插入
+npx universal-db-mcp --type mysql --permissions read,insert ...
+
+# 完全控制（等价于原来的 --danger-allow-write）
+npx universal-db-mcp --type mysql --permission-mode full ...
 ```
+
+**不同传输方式的权限配置：**
+
+> ⚠️ 不同传输方式的参数命名风格不同，请注意区分！
+
+| 传输方式 | 参数位置 | 权限模式参数 | 自定义权限参数 |
+|---------|---------|-------------|---------------|
+| STDIO (Claude Desktop) | 命令行 | `--permission-mode` | `--permissions` |
+| SSE (Dify 等) | URL Query | `permissionMode` | `permissions` |
+| Streamable HTTP | HTTP Header | `X-DB-Permission-Mode` | `X-DB-Permissions` |
+| REST API | JSON Body | `permissionMode` | `permissions` |
 
 **最佳实践：**
 - 生产环境永远不要启用写入模式

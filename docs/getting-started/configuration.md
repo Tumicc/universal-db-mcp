@@ -16,10 +16,43 @@ universal-db-mcp [选项]
   --database <database>    数据库名称
   --file <file>            SQLite 数据库文件路径
   --auth-source <db>       MongoDB 认证数据库（默认: admin）
-  --danger-allow-write     启用写入模式（危险！）
+  --permission-mode <mode> 权限模式: safe | readwrite | full
+  --permissions <list>     自定义权限列表，逗号分隔: read,insert,update,delete,ddl
+  --danger-allow-write     启用完全写入模式（等价于 --permission-mode full）
   --help                   显示帮助信息
   --version                显示版本号
 ```
+
+### 权限模式参数
+
+| 模式 | 允许的操作 | 说明 |
+|------|-----------|------|
+| `safe`（默认） | SELECT | 只读，最安全 |
+| `readwrite` | SELECT, INSERT, UPDATE | 读写但不能删除 |
+| `full` | 所有操作 | 完全控制（危险！） |
+
+**权限类型：**
+- `read` - SELECT 查询（始终包含）
+- `insert` - INSERT, REPLACE
+- `update` - UPDATE
+- `delete` - DELETE, TRUNCATE
+- `ddl` - CREATE, ALTER, DROP, RENAME
+
+### 不同传输方式的权限配置
+
+> ⚠️ **重要提示**：不同传输方式的参数命名风格不同，请注意区分！
+
+| 传输方式 | 参数位置 | 权限模式参数 | 自定义权限参数 |
+|---------|---------|-------------|---------------|
+| **STDIO** (Claude Desktop) | 命令行 | `--permission-mode` | `--permissions` |
+| **SSE** (Dify 等) | URL Query | `permissionMode` | `permissions` |
+| **Streamable HTTP** | HTTP Header | `X-DB-Permission-Mode` | `X-DB-Permissions` |
+| **REST API** | JSON Body | `permissionMode` | `permissions` |
+
+**命名规则：**
+- 命令行参数：使用连字符 `--permission-mode`（CLI 惯例）
+- HTTP Header：使用连字符 `X-DB-Permission-Mode`（HTTP 惯例）
+- URL Query / JSON Body：使用驼峰 `permissionMode`（JavaScript 惯例）
 
 ### 数据库类型参数
 
@@ -224,7 +257,7 @@ SESSION_CLEANUP_INTERVAL=300000
 }
 ```
 
-### 启用写入模式
+### 启用读写模式（不能删除）
 
 ```json
 {
@@ -239,7 +272,51 @@ SESSION_CLEANUP_INTERVAL=300000
         "--user", "dev_user",
         "--password", "dev_password",
         "--database", "dev_database",
-        "--danger-allow-write"
+        "--permission-mode", "readwrite"
+      ]
+    }
+  }
+}
+```
+
+### 启用完全写入模式
+
+```json
+{
+  "mcpServers": {
+    "mysql-dev": {
+      "command": "npx",
+      "args": [
+        "universal-db-mcp",
+        "--type", "mysql",
+        "--host", "localhost",
+        "--port", "3306",
+        "--user", "dev_user",
+        "--password", "dev_password",
+        "--database", "dev_database",
+        "--permission-mode", "full"
+      ]
+    }
+  }
+}
+```
+
+### 自定义权限
+
+```json
+{
+  "mcpServers": {
+    "mysql-dev": {
+      "command": "npx",
+      "args": [
+        "universal-db-mcp",
+        "--type", "mysql",
+        "--host", "localhost",
+        "--port", "3306",
+        "--user", "dev_user",
+        "--password", "dev_password",
+        "--database", "dev_database",
+        "--permissions", "read,insert,update"
       ]
     }
   }

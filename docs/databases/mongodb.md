@@ -321,7 +321,7 @@ db.users.find({})
 }
 ```
 
-### 写入操作（需要 --danger-allow-write）
+### 写入操作（需要 --permission-mode readwrite 或 full）
 
 #### 插入单个文档
 
@@ -538,7 +538,7 @@ db.users.find({})
 **错误**: `操作被拒绝：当前处于只读安全模式`
 
 **解决方案**:
-- 这是安全特性，如需写入，添加 `--danger-allow-write` 参数
+- 根据需要使用 `--permission-mode readwrite` 或 `--permission-mode full`
 - **警告**: 仅在开发环境使用！
 
 ### Atlas 连接问题
@@ -566,7 +566,7 @@ db.users.find({})
 ### 安全建议
 
 1. **生产环境只读**:
-   - 永远不要在生产环境启用 `--danger-allow-write`
+   - 永远不要在生产环境启用 `--permission-mode full`
    - 使用只读用户连接生产数据库
 
 2. **最小权限原则**:

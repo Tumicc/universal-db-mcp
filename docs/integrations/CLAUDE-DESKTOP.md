@@ -84,10 +84,14 @@ Add the following to your `claude_desktop_config.json`:
 | `--password` | Yes* | Database password |
 | `--database` | Yes* | Database name |
 | `--file-path` | Yes* | SQLite database file path (for sqlite type only) |
-| `--danger-allow-write` | No | Enable write operations (default: read-only) |
+| `--permission-mode` | No | Permission mode: safe (read-only), readwrite (no delete), full (all operations) |
+| `--permissions` | No | Custom permission list, comma-separated: read,insert,update,delete,ddl |
+| `--danger-allow-write` | No | Enable full write operations (equivalent to --permission-mode full) |
 | `--oracle-client-path` | No | Oracle Instant Client path (for Oracle 11g and earlier) |
 
 *Required fields depend on database type
+
+> ⚠️ **Note**: Claude Desktop uses STDIO transport with hyphenated CLI parameters (e.g., `--permission-mode`). If you use other transports (SSE, Streamable HTTP, REST API), parameter naming differs. See [Configuration Guide](../getting-started/configuration.md).
 
 ### Supported Database Types
 
@@ -518,7 +522,51 @@ By default, Universal DB MCP runs in read-only mode, blocking all write operatio
 
 ### Write Mode (Use with Caution)
 
-To enable write operations, add the `--danger-allow-write` flag:
+By default, the server runs in read-only mode. Fine-grained permission control is supported:
+
+**Read-Write Mode (No Delete):**
+
+```json
+{
+  "mcpServers": {
+    "my-database-readwrite": {
+      "command": "npx",
+      "args": [
+        "universal-db-mcp",
+        "--type", "mysql",
+        "--host", "localhost",
+        "--user", "admin",
+        "--password", "password",
+        "--database", "mydb",
+        "--permission-mode", "readwrite"
+      ]
+    }
+  }
+}
+```
+
+**Custom Permissions:**
+
+```json
+{
+  "mcpServers": {
+    "my-database-custom": {
+      "command": "npx",
+      "args": [
+        "universal-db-mcp",
+        "--type", "mysql",
+        "--host", "localhost",
+        "--user", "admin",
+        "--password", "password",
+        "--database", "mydb",
+        "--permissions", "read,insert,update"
+      ]
+    }
+  }
+}
+```
+
+**Full Control Mode (Dangerous!):**
 
 ```json
 {
@@ -532,7 +580,7 @@ To enable write operations, add the `--danger-allow-write` flag:
         "--user", "admin",
         "--password", "password",
         "--database", "mydb",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -652,7 +700,7 @@ Once configured, Claude Desktop will have access to the following tools:
 
 **Solutions:**
 1. **Check mode** - By default, write operations are blocked.
-2. **Enable write mode** - Add `--danger-allow-write` flag if needed.
+2. **Enable write mode** - Use `--permission-mode readwrite` for read/write without delete, or `--permission-mode full` for all operations.
 3. **Verify user permissions** - Ensure the database user has write permissions.
 
 ### Viewing Logs

@@ -120,7 +120,7 @@ npm install universal-db-mcp
         "--user", "dev_user",
         "--password", "dev_password",
         "--database", "DevDB",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -274,7 +274,7 @@ Windows 身份验证支持将在未来版本中添加。
 **错误**: `操作被拒绝：当前处于只读安全模式`
 
 **解决方案**:
-- 这是安全特性，如需写入，添加 `--danger-allow-write` 参数
+- 根据需要使用 `--permission-mode readwrite` 或 `--permission-mode full`
 - 仅在开发环境使用！
 
 ### Azure SQL 连接超时

@@ -38,7 +38,7 @@
         "--user", "dev_user",
         "--password", "dev_password",
         "--database", "dev_database",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }

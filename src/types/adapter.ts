@@ -156,6 +156,16 @@ export interface RelationshipInfo {
 }
 
 /**
+ * 权限类型
+ */
+export type PermissionType = 'read' | 'insert' | 'update' | 'delete' | 'ddl';
+
+/**
+ * 权限模式
+ */
+export type PermissionMode = 'safe' | 'readwrite' | 'full' | 'custom';
+
+/**
  * 数据库连接配置
  */
 export interface DbConfig {
@@ -167,8 +177,12 @@ export interface DbConfig {
   database?: string;
   /** SQLite 数据库文件路径 */
   filePath?: string;
-  /** 是否允许写操作（默认 false，只读模式） */
+  /** 是否允许写操作（默认 false，只读模式）- 向后兼容，推荐使用 permissionMode */
   allowWrite?: boolean;
+  /** 权限模式：safe=只读, readwrite=读写不删, full=完全控制, custom=自定义 */
+  permissionMode?: PermissionMode;
+  /** 自定义权限列表，当 permissionMode='custom' 或直接指定时生效 */
+  permissions?: PermissionType[];
   /** Oracle Instant Client 路径（启用 Thick 模式以支持 11g） */
   oracleClientPath?: string;
 }

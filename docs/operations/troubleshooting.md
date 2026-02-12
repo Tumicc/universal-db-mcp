@@ -85,7 +85,7 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO user;
 **原因**：默认只读模式，拒绝写入操作
 
 **解决方案**：
-- 如需写入，添加 `--danger-allow-write` 参数
+- 根据需要使用 `--permission-mode readwrite` 或 `--permission-mode full`
 - 仅在开发环境使用
 
 ### 查询超时

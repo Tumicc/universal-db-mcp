@@ -6,8 +6,9 @@
 
 import { Command } from 'commander';
 import { DatabaseMCPServer } from './mcp-server.js';
-import type { DbConfig } from '../types/adapter.js';
+import type { DbConfig, PermissionType, PermissionMode } from '../types/adapter.js';
 import { createAdapter, normalizeDbType } from '../utils/adapter-factory.js';
+import { resolvePermissions, formatPermissions } from '../utils/safety.js';
 
 /**
  * Start MCP server
@@ -28,11 +29,18 @@ export async function startMcpServer(): Promise<void> {
     .option('--file <file>', 'SQLite 数据库文件路径')
     .option('--auth-source <authSource>', 'MongoDB 认证数据库（默认为 admin）')
     .option('--oracle-client-path <path>', 'Oracle Instant Client 路径（启用 Thick 模式以支持 11g）')
-    .option('--danger-allow-write', '启用写入模式（危险！默认为只读模式）', false)
+    .option('--danger-allow-write', '启用完全写入模式（危险！等价于 --permission-mode=full）', false)
+    .option('--permission-mode <mode>', '权限模式: safe(只读) | readwrite(读写不删) | full(完全控制)', 'safe')
+    .option('--permissions <list>', '自定义权限列表，逗号分隔: read,insert,update,delete,ddl')
     .action(async (options) => {
       try {
         // Normalize database type
         const dbType = normalizeDbType(options.type);
+
+        // Parse permissions from command line
+        const parsedPermissions = options.permissions
+          ? options.permissions.split(',').map((p: string) => p.trim()) as PermissionType[]
+          : undefined;
 
         // Build configuration
         const config: DbConfig = {
@@ -44,6 +52,8 @@ export async function startMcpServer(): Promise<void> {
           database: options.database,
           filePath: options.file,
           allowWrite: options.dangerAllowWrite,
+          permissionMode: options.dangerAllowWrite ? 'full' : options.permissionMode as PermissionMode,
+          permissions: parsedPermissions,
         };
 
         // Add MongoDB-specific config
@@ -56,6 +66,10 @@ export async function startMcpServer(): Promise<void> {
           config.oracleClientPath = options.oracleClientPath;
         }
 
+        // Resolve and display permissions
+        const permissions = resolvePermissions(config);
+        const isSafeMode = permissions.length === 1 && permissions[0] === 'read';
+
         console.error('🔧 配置信息:');
         console.error(`   数据库类型: ${config.type}`);
         if (config.type === 'sqlite') {
@@ -64,7 +78,7 @@ export async function startMcpServer(): Promise<void> {
           console.error(`   主机地址: ${config.host}:${config.port}`);
           console.error(`   数据库名: ${config.database || '(默认)'}`);
         }
-        console.error(`   安全模式: ${config.allowWrite ? '❌ 写入已启用' : '✅ 只读模式'}`);
+        console.error(`   权限模式: ${isSafeMode ? '✅ 只读模式' : '⚠️  ' + formatPermissions(permissions)}`);
         console.error('');
 
         // Create server

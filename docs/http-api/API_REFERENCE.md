@@ -113,8 +113,12 @@ Establish an SSE connection. Database configuration is passed via URL parameters
 | `database` | Yes* | Database name |
 | `filePath` | Yes* | SQLite file path |
 | `allowWrite` | No | Enable write operations (default: false) |
+| `permissionMode` | No | Permission mode: `safe` (default), `readwrite`, `full` |
+| `permissions` | No | Custom permissions, comma-separated: `read,insert,update,delete,ddl` |
 
 *Required fields depend on database type
+
+> ⚠️ **Note**: Use camelCase for URL parameters (`permissionMode`, `permissions`), not hyphenated names.
 
 **Request Example**:
 ```bash
@@ -155,9 +159,13 @@ MCP Streamable HTTP endpoint. Database configuration is passed via headers.
 | `X-DB-Database` | Yes* | Database name |
 | `X-DB-FilePath` | Yes* | SQLite file path |
 | `X-DB-Allow-Write` | No | Enable write operations (default: false) |
+| `X-DB-Permission-Mode` | No | Permission mode: `safe` (default), `readwrite`, `full` |
+| `X-DB-Permissions` | No | Custom permissions, comma-separated: `read,insert,update,delete,ddl` |
 | `mcp-session-id` | No | Session ID for subsequent requests |
 
 *Required fields depend on database type; authentication required if API_KEYS is configured
+
+> ⚠️ **Note**: Use hyphenated names for HTTP headers (`X-DB-Permission-Mode`, `X-DB-Permissions`).
 
 **Initialize Request Example**:
 ```bash
@@ -291,7 +299,9 @@ Connect to a database and create a session.
   "user": "root",
   "password": "your_password",
   "database": "mydb",
-  "allowWrite": false
+  "allowWrite": false,
+  "permissionMode": "safe",
+  "permissions": ["read", "insert"]
 }
 ```
 
@@ -304,7 +314,11 @@ Connect to a database and create a session.
 - `database` (string, optional): Database name
 - `filePath` (string, required for SQLite): SQLite database file path
 - `authSource` (string, optional for MongoDB): Authentication database (default: admin)
-- `allowWrite` (boolean, optional): Enable write operations (default: false)
+- `allowWrite` (boolean, optional): Enable write operations (default: false) - deprecated, use `permissionMode`
+- `permissionMode` (string, optional): Permission mode: `safe` (default), `readwrite`, `full`
+- `permissions` (array, optional): Custom permissions array: `["read", "insert", "update", "delete", "ddl"]`
+
+> ⚠️ **Note**: Use camelCase for JSON body (`permissionMode`, `permissions`), not hyphenated names like `permission-mode`.
 
 **Request Example**:
 ```bash

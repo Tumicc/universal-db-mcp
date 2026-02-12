@@ -10,7 +10,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { DatabaseMCPServer } from '../../mcp/mcp-server.js';
-import type { DbConfig } from '../../types/adapter.js';
+import type { DbConfig, PermissionType, PermissionMode } from '../../types/adapter.js';
 import { createAdapter } from '../../utils/adapter-factory.js';
 
 // 支持的数据库类型
@@ -43,6 +43,12 @@ function parseDbConfigFromQuery(query: Record<string, unknown>): DbConfig | null
   const type = query.type as string;
   if (!type || !isValidDbType(type)) return null;
 
+  // 解析 permissions 数组
+  const permissionsStr = query.permissions as string;
+  const permissions = permissionsStr
+    ? permissionsStr.split(',').map(p => p.trim()) as PermissionType[]
+    : undefined;
+
   return {
     type,
     host: query.host as string,
@@ -52,6 +58,8 @@ function parseDbConfigFromQuery(query: Record<string, unknown>): DbConfig | null
     database: query.database as string,
     filePath: query.filePath as string,
     allowWrite: query.allowWrite === 'true',
+    permissionMode: query.permissionMode as PermissionMode,
+    permissions,
     oracleClientPath: query.oracleClientPath as string,
   };
 }
@@ -230,6 +238,7 @@ export async function setupMcpSseRoutes(fastify: FastifyInstance): Promise<void>
         }
 
         // 构建数据库配置
+        const permissionsHeader = headers['x-db-permissions'] as string;
         const config: DbConfig = {
           type: dbType,
           host: headers['x-db-host'] as string,
@@ -239,6 +248,8 @@ export async function setupMcpSseRoutes(fastify: FastifyInstance): Promise<void>
           database: headers['x-db-database'] as string,
           filePath: headers['x-db-filepath'] as string,
           allowWrite: headers['x-db-allow-write'] === 'true',
+          permissionMode: headers['x-db-permission-mode'] as PermissionMode,
+          permissions: permissionsHeader ? permissionsHeader.split(',').map(p => p.trim()) as PermissionType[] : undefined,
           oracleClientPath: headers['x-db-oracle-client-path'] as string,
         };
 

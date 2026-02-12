@@ -39,7 +39,8 @@
       "WebFetch(domain:www.pulsemcp.com)",
       "WebFetch(domain:www.modb.pro)",
       "Bash(npm test:*)",
-      "Bash(npx vitest run:*)"
+      "Bash(npx vitest run:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

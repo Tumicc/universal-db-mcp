@@ -123,8 +123,12 @@ Once configured, the following MCP tools will be available in your Dify applicat
 | `database` | Yes* | Database name |
 | `filePath` | Yes* | SQLite file path (for sqlite type) |
 | `allowWrite` | No | Enable write operations (default: false) |
+| `permissionMode` | No | Permission mode: `safe` (default), `readwrite`, `full` |
+| `permissions` | No | Custom permissions, comma-separated: `read,insert,update,delete,ddl` |
 
 *Required fields depend on database type
+
+> ⚠️ **Note**: Use camelCase for URL parameters (`permissionMode`), not hyphenated names.
 
 ### Example SSE URLs
 
@@ -160,10 +164,14 @@ http://localhost:3000/sse?type=redis&host=localhost&port=6379&password=secret
 | `X-DB-Database` | Yes* | Database name |
 | `X-DB-FilePath` | Yes* | SQLite file path (for sqlite type) |
 | `X-DB-Allow-Write` | No | Enable write operations (default: false) |
+| `X-DB-Permission-Mode` | No | Permission mode: `safe` (default), `readwrite`, `full` |
+| `X-DB-Permissions` | No | Custom permissions, comma-separated: `read,insert,update,delete,ddl` |
 | `X-DB-Oracle-Client-Path` | No | Oracle Instant Client path (for Oracle 11g) |
 | `mcp-session-id` | No | Session ID for subsequent requests |
 
 *Required fields depend on database type
+
+> ⚠️ **Note**: Use hyphenated names for HTTP headers (`X-DB-Permission-Mode`).
 
 ### Example Streamable HTTP Requests
 

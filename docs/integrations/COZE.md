@@ -78,7 +78,8 @@ Note your API endpoint URL:
   "port": {{port}},
   "user": "{{user}}",
   "password": "{{password}}",
-  "database": "{{database}}"
+  "database": "{{database}}",
+  "permissionMode": "{{permission_mode}}"
 }
 ```
 
@@ -89,6 +90,10 @@ Note your API endpoint URL:
 - `user` (string, required): Username
 - `password` (string, required): Password
 - `database` (string, required): Database name
+- `permission_mode` (string, optional): Permission mode: `safe` (default, read-only), `readwrite` (read/write no delete), `full` (full control)
+- `permissions` (array, optional): Custom permissions: `["read", "insert", "update", "delete", "ddl"]`
+
+> ⚠️ **Note**: REST API uses camelCase (`permissionMode`), not hyphenated names.
 
 **Response Example**:
 ```json

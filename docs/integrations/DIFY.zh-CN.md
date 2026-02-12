@@ -123,8 +123,12 @@ X-DB-Database: your_database
 | `database` | 是* | 数据库名称 |
 | `filePath` | 是* | SQLite 文件路径（仅 sqlite 类型） |
 | `allowWrite` | 否 | 启用写操作（默认：false） |
+| `permissionMode` | 否 | 权限模式：`safe`（默认）、`readwrite`、`full` |
+| `permissions` | 否 | 自定义权限，逗号分隔：`read,insert,update,delete,ddl` |
 
 *必填字段取决于数据库类型
+
+> ⚠️ **注意**：URL 参数使用驼峰命名（`permissionMode`），不是连字符命名。
 
 ### SSE URL 示例
 
@@ -170,10 +174,14 @@ http://localhost:3000/sse?type=kingbase&host=localhost&port=54321&user=system&pa
 | `X-DB-Database` | 是* | 数据库名称 |
 | `X-DB-FilePath` | 是* | SQLite 文件路径（仅 sqlite 类型） |
 | `X-DB-Allow-Write` | 否 | 启用写操作（默认：false） |
+| `X-DB-Permission-Mode` | 否 | 权限模式：`safe`（默认）、`readwrite`、`full` |
+| `X-DB-Permissions` | 否 | 自定义权限，逗号分隔：`read,insert,update,delete,ddl` |
 | `X-DB-Oracle-Client-Path` | 否 | Oracle Instant Client 路径（用于 Oracle 11g） |
 | `mcp-session-id` | 否 | 后续请求的会话 ID |
 
 *必填字段取决于数据库类型
+
+> ⚠️ **注意**：HTTP Header 使用连字符命名（`X-DB-Permission-Mode`）。
 
 ### Streamable HTTP 请求示例
 

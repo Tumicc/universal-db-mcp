@@ -79,7 +79,8 @@ docker run -d \
   "port": {{port}},
   "user": "{{user}}",
   "password": "{{password}}",
-  "database": "{{database}}"
+  "database": "{{database}}",
+  "permissionMode": "{{permission_mode}}"
 }
 ```
 
@@ -90,6 +91,10 @@ docker run -d \
 - `user` (字符串, 必需): 用户名
 - `password` (字符串, 必需): 密码
 - `database` (字符串, 必需): 数据库名称
+- `permission_mode` (字符串, 可选): 权限模式：`safe`（默认，只读）、`readwrite`（读写不删）、`full`（完全控制）
+- `permissions` (数组, 可选): 自定义权限列表：`["read", "insert", "update", "delete", "ddl"]`
+
+> ⚠️ **注意**：REST API 使用驼峰命名（`permissionMode`），不是连字符命名。
 
 **响应示例**:
 ```json

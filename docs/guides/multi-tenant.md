@@ -568,7 +568,7 @@ GROUP BY company_id;
 
 ### Q5: 如何在写入模式下使用多租户？
 
-**A**: 在配置中添加 `--danger-allow-write` 参数，并在对话中明确指定租户 ID。建议在生产环境中谨慎使用写入模式。
+**A**: 在配置中添加 `--permission-mode readwrite` 或 `--permission-mode full` 参数，并在对话中明确指定租户 ID。建议在生产环境中谨慎使用写入模式。
 
 ---
 

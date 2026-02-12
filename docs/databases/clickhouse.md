@@ -92,7 +92,7 @@ clickhouse server
       "command": "npx",
       "args": [
         "universal-db-mcp",
-        "--danger-allow-write",
+        "--permission-mode", "full",
         "--type", "clickhouse",
         "--host", "localhost",
         "--port", "8123",

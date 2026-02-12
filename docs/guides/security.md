@@ -4,29 +4,120 @@
 
 ## 安全模式
 
+### 权限模式
+
+Universal DB MCP 支持细粒度权限控制：
+
+| 模式 | 允许的操作 | 说明 |
+|------|-----------|------|
+| `safe`（默认） | SELECT | 只读，最安全 |
+| `readwrite` | SELECT, INSERT, UPDATE | 读写但不能删除 |
+| `full` | 所有操作 | 完全控制（危险！） |
+| `custom` | 自定义组合 | 通过 `--permissions` 指定 |
+
+**权限类型：**
+- `read` - SELECT 查询（始终包含）
+- `insert` - INSERT, REPLACE
+- `update` - UPDATE
+- `delete` - DELETE, TRUNCATE
+- `ddl` - CREATE, ALTER, DROP, RENAME
+
 ### 只读模式（默认）
 
-默认情况下，工具运行在**只读模式**，会拒绝所有写入操作：
+默认情况下，工具运行在**只读模式**，会拒绝所有写入操作。这是最安全的配置，推荐在生产环境使用。
 
-- DELETE
-- UPDATE
-- INSERT
-- DROP
-- TRUNCATE
-- ALTER
-- CREATE
+### 读写模式（不能删除）
 
-这是最安全的配置，推荐在生产环境使用。
-
-### 写入模式
-
-如需执行写入操作，需要显式添加参数：
+适用于数据录入场景，允许插入和更新，但禁止删除：
 
 ```bash
+--permission-mode readwrite
+```
+
+### 自定义权限
+
+根据需求自由组合权限：
+
+```bash
+# 只允许读和插入
+--permissions read,insert
+
+# 允许读、插入、更新
+--permissions read,insert,update
+```
+
+### 完全控制模式
+
+如需执行所有操作，需要显式添加参数：
+
+```bash
+--permission-mode full
+# 或（向后兼容）
 --danger-allow-write
 ```
 
-**警告**：启用写入模式后，Claude 可以修改你的数据库。请仅在开发环境使用。
+**警告**：启用完全控制模式后，AI 可以修改和删除你的数据库数据。请仅在开发环境使用。
+
+### 不同传输方式的权限配置
+
+> ⚠️ **重要提示**：不同传输方式的参数命名风格不同，请注意区分！
+
+#### STDIO 模式（Claude Desktop 等）
+
+使用命令行参数（连字符风格）：
+
+```bash
+# 预设模式
+--permission-mode readwrite
+
+# 自定义权限
+--permissions read,insert,update
+```
+
+#### SSE 模式（Dify 等）
+
+使用 URL Query 参数（驼峰风格）：
+
+```
+GET /sse?type=mysql&host=localhost&permissionMode=readwrite
+GET /sse?type=mysql&host=localhost&permissions=read,insert,update
+```
+
+#### Streamable HTTP 模式
+
+使用 HTTP Header（连字符风格）：
+
+```
+POST /mcp
+Headers:
+  X-DB-Type: mysql
+  X-DB-Host: localhost
+  X-DB-Permission-Mode: readwrite
+  X-DB-Permissions: read,insert,update
+```
+
+#### REST API 模式
+
+使用 JSON Body（驼峰风格）：
+
+```json
+POST /api/connect
+{
+  "type": "mysql",
+  "host": "localhost",
+  "permissionMode": "readwrite",
+  "permissions": ["read", "insert", "update"]
+}
+```
+
+#### 参数命名汇总
+
+| 传输方式 | 参数位置 | 权限模式参数 | 自定义权限参数 |
+|---------|---------|-------------|---------------|
+| STDIO | 命令行 | `--permission-mode` | `--permissions` |
+| SSE | URL Query | `permissionMode` | `permissions` |
+| Streamable HTTP | HTTP Header | `X-DB-Permission-Mode` | `X-DB-Permissions` |
+| REST API | JSON Body | `permissionMode` | `permissions` |
 
 ## 数据库账号安全
 

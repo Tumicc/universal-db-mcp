@@ -39,6 +39,8 @@ export async function setupConnectionRoutes(
           filePath: { type: 'string' },
           authSource: { type: 'string' },
           allowWrite: { type: 'boolean', default: false },
+          permissionMode: { type: 'string', enum: ['safe', 'readwrite', 'full', 'custom'] },
+          permissions: { type: 'array', items: { type: 'string', enum: ['read', 'insert', 'update', 'delete', 'ddl'] } },
           oracleClientPath: { type: 'string' },
         },
       },

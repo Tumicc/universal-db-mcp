@@ -2,6 +2,45 @@
 
 本文档记录 Universal DB MCP 的版本更新历史。
 
+## [2.10.0] - 2026
+
+### 新增
+- **细粒度权限控制** - 支持自定义操作权限组合，不再只有"只读"和"完全写入"两种模式
+  - **权限模式** - 新增 `--permission-mode` 参数
+    - `safe`（默认）：只读模式，仅允许 SELECT
+    - `readwrite`：读写模式，允许 SELECT/INSERT/UPDATE，禁止 DELETE 和 DDL
+    - `full`：完全控制，等价于原来的 `--danger-allow-write`
+    - `custom`：自定义模式，配合 `--permissions` 使用
+  - **自定义权限** - 新增 `--permissions` 参数，支持逗号分隔的权限列表
+    - `read`：SELECT 查询（始终包含）
+    - `insert`：INSERT, REPLACE
+    - `update`：UPDATE
+    - `delete`：DELETE, TRUNCATE
+    - `ddl`：CREATE, ALTER, DROP, RENAME
+  - **向后兼容** - `--danger-allow-write` 仍然有效，等价于 `--permission-mode=full`
+  - **HTTP API 支持** - REST API 和 MCP SSE/Streamable HTTP 端点同样支持新权限参数
+
+### 改进
+- 更新 `DbConfig` 类型，新增 `permissionMode` 和 `permissions` 字段
+- 重构 `safety.ts`，支持细粒度权限检查
+- 更新命令行帮助信息，添加新参数说明
+- 更新 README 文档（中英文），添加权限模式说明
+
+### 文档
+- **完善权限配置文档** - 添加不同传输方式的权限参数命名说明
+  - STDIO 模式（Claude Desktop）：使用连字符命名 `--permission-mode`、`--permissions`
+  - SSE 模式（Dify 等）：使用驼峰命名 `permissionMode`、`permissions`（URL Query）
+  - Streamable HTTP 模式：使用连字符命名 `X-DB-Permission-Mode`、`X-DB-Permissions`（HTTP Header）
+  - REST API 模式：使用驼峰命名 `permissionMode`、`permissions`（JSON Body）
+- 更新以下文档：
+  - `docs/getting-started/configuration.md` - 添加传输方式权限配置汇总表
+  - `docs/guides/security.md` - 添加各传输方式的权限配置示例
+  - `docs/http-api/API_REFERENCE.md` / `API_REFERENCE.zh-CN.md` - 添加权限参数说明
+  - `docs/integrations/DIFY.md` / `DIFY.zh-CN.md` - 添加 SSE 和 Streamable HTTP 权限参数
+  - `docs/integrations/CLAUDE-DESKTOP.md` / `CLAUDE-DESKTOP.zh-CN.md` - 添加参数命名提示
+  - `docs/integrations/COZE.md` / `COZE.zh-CN.md` - 添加 REST API 权限参数
+  - `README.md` / `README.zh-CN.md` - 添加传输方式权限配置汇总表
+
 ## [2.9.0] - 2026
 
 ### 新增

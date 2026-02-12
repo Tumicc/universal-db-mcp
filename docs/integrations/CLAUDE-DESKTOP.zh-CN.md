@@ -75,10 +75,14 @@ node --version
 | `--password` | 是* | 数据库密码 |
 | `--database` | 是* | 数据库名称 |
 | `--file-path` | 是* | SQLite 数据库文件路径（仅 sqlite 类型） |
-| `--danger-allow-write` | 否 | 启用写操作（默认：只读） |
+| `--permission-mode` | 否 | 权限模式：safe（只读）、readwrite（读写不删）、full（完全控制） |
+| `--permissions` | 否 | 自定义权限列表，逗号分隔：read,insert,update,delete,ddl |
+| `--danger-allow-write` | 否 | 启用完全写操作（等价于 --permission-mode full） |
 | `--oracle-client-path` | 否 | Oracle Instant Client 路径（用于 Oracle 11g 及更早版本） |
 
 *必需字段取决于数据库类型
+
+> ⚠️ **注意**：Claude Desktop 使用 STDIO 传输，命令行参数使用连字符命名（如 `--permission-mode`）。如果您使用其他传输方式（SSE、Streamable HTTP、REST API），参数命名会有所不同，请参阅 [配置说明](../getting-started/configuration.md)。
 
 ### 支持的数据库类型
 
@@ -348,7 +352,53 @@ node --version
 
 ### 启用写操作
 
-默认情况下，服务器以只读模式运行。要启用写操作：
+默认情况下，服务器以只读模式运行。支持细粒度权限控制：
+
+**读写模式（不能删除）：**
+
+```json
+{
+  "mcpServers": {
+    "mysql-readwrite": {
+      "command": "npx",
+      "args": [
+        "universal-db-mcp",
+        "--type", "mysql",
+        "--host", "localhost",
+        "--port", "3306",
+        "--user", "root",
+        "--password", "your_password",
+        "--database", "your_database",
+        "--permission-mode", "readwrite"
+      ]
+    }
+  }
+}
+```
+
+**自定义权限：**
+
+```json
+{
+  "mcpServers": {
+    "mysql-custom": {
+      "command": "npx",
+      "args": [
+        "universal-db-mcp",
+        "--type", "mysql",
+        "--host", "localhost",
+        "--port", "3306",
+        "--user", "root",
+        "--password", "your_password",
+        "--database", "your_database",
+        "--permissions", "read,insert,update"
+      ]
+    }
+  }
+}
+```
+
+**完全控制模式（危险！）：**
 
 ```json
 {
@@ -363,7 +413,7 @@ node --version
         "--user", "root",
         "--password", "your_password",
         "--database", "your_database",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -494,7 +544,7 @@ WHERE created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
 
 **解决方案**：
 1. **检查模式** - 默认情况下，写操作被阻止。
-2. **启用写入模式** - 如需要，添加 `--danger-allow-write` 参数。
+2. **启用写入模式** - 使用 `--permission-mode readwrite` 或 `--permission-mode full`。
 3. **验证用户权限** - 确保数据库用户有写入权限。
 
 ## 安全最佳实践

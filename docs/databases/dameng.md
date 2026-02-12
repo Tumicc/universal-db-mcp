@@ -90,7 +90,7 @@ npm install universal-db-mcp
         "--user", "dev_user",
         "--password", "dev_password",
         "--database", "DEVDB",
-        "--danger-allow-write"
+        "--permission-mode", "full"
       ]
     }
   }
@@ -160,7 +160,7 @@ npm install universal-db-mcp
 ### 5. 安全模式
 
 - 默认为只读模式，阻止所有写操作
-- 需要写入时必须显式添加 `--danger-allow-write` 参数
+- 需要写入时使用 `--permission-mode readwrite` 或 `--permission-mode full`
 - 生产环境强烈建议使用只读模式
 
 ## 故障排查

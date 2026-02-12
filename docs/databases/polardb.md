@@ -72,7 +72,7 @@ PolarDB 提供三种连接地址：
       "command": "npx",
       "args": [
         "universal-db-mcp",
-        "--danger-allow-write",
+        "--permission-mode", "full",
         "--type", "polardb",
         "--host", "pc-xxxxx.mysql.polardb.rds.aliyuncs.com",
         "--port", "3306",
@@ -94,7 +94,7 @@ PolarDB 提供三种连接地址：
       "command": "npx",
       "args": [
         "universal-db-mcp",
-        "--danger-allow-write",
+        "--permission-mode", "full",
         "--type", "polardb",
         "--host", "pc-xxxxx.mysql.polardb.rds.aliyuncs.com",
         "--port", "3306",
@@ -174,7 +174,7 @@ HAVING total_amount > 1000
 ORDER BY total_amount DESC;
 ```
 
-### 写入操作（需要启用 --danger-allow-write）
+### 写入操作（需要 --permission-mode readwrite 或 full）
 
 ```
 你：在 users 表中插入一条新用户记录，姓名为张三，邮箱为 zhangsan@example.com

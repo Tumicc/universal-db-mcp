@@ -91,7 +91,7 @@ Claude 会执行: KEYS session:* 并统计数量
 - `DBSIZE` - 获取键数量
 - `INFO` - 获取服务器信息
 
-### 写入模式（需要 --danger-allow-write）
+### 写入模式（需要 --permission-mode readwrite 或 full）
 
 - `SET` - 设置字符串值
 - `HSET` - 设置哈希字段

@@ -130,10 +130,20 @@ curl -X POST http://localhost:3000/api/query \
 
 默认情况下，工具运行在**只读模式**，会拒绝所有写入操作。
 
-如需执行写入操作（请谨慎！），添加参数：
+支持细粒度权限控制：
 
 ```bash
---danger-allow-write
+# 只读模式（默认）
+--permission-mode safe
+
+# 读写但不能删除
+--permission-mode readwrite
+
+# 自定义权限
+--permissions read,insert,update
+
+# 完全控制（危险！）
+--permission-mode full
 ```
 
 ## 下一步
