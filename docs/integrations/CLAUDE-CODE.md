@@ -123,7 +123,7 @@ Add to your Claude Code settings file:
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "./data/app.db"
+        "--file", "./data/app.db"
       ]
     }
   }

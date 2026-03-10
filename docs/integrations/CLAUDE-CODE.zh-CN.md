@@ -145,7 +145,7 @@ claude mcp get universal-db-mcp
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "./data/app.db"
+        "--file", "./data/app.db"
       ]
     }
   }

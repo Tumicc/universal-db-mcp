@@ -118,7 +118,7 @@ After adding the configuration, save the settings and restart Obsidian for the c
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "/path/to/your/database.db"
+        "--file", "/path/to/your/database.db"
       ]
     }
   }
@@ -411,7 +411,7 @@ The AI will create and execute the appropriate queries to generate the report.
 | `--user` | Yes* | Database username |
 | `--password` | Yes* | Database password |
 | `--database` | Yes* | Database name |
-| `--file-path` | Yes* | SQLite file path (for sqlite type only) |
+| `--file` | Yes* | SQLite file path (for sqlite type only) |
 | `--allow-write` | No | Enable write operations (default: false) |
 | `--oracle-client-path` | No | Oracle Instant Client path (for Oracle 11g) |
 

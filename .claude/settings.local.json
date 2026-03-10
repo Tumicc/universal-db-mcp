@@ -40,7 +40,9 @@
       "WebFetch(domain:www.modb.pro)",
       "Bash(npm test:*)",
       "Bash(npx vitest run:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(MODE=mcp node:*)",
+      "Bash(npx .:*)"
     ]
   }
 }

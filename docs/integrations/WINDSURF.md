@@ -89,7 +89,7 @@ Edit the `mcp_config.json` file to add Universal Database MCP Server:
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "/path/to/your/database.db"
+        "--file", "/path/to/your/database.db"
       ]
     }
   }
@@ -230,7 +230,7 @@ After saving the configuration file, restart Windsurf IDE to load the MCP server
 | `--user` | Yes* | Database username |
 | `--password` | Yes* | Database password |
 | `--database` | Yes* | Database name |
-| `--file-path` | Yes* | SQLite database file path (for sqlite type only) |
+| `--file` | Yes* | SQLite database file path (for sqlite type only) |
 | `--allow-write` | No | Enable write operations (default: false) |
 | `--oracle-client-path` | No | Oracle Instant Client path (for Oracle 11g and earlier) |
 

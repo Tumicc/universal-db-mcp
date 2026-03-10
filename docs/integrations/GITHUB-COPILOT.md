@@ -107,7 +107,7 @@ This guide shows how to integrate Universal Database MCP Server with GitHub Copi
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "${workspaceFolder}/data/app.db"
+        "--file", "${workspaceFolder}/data/app.db"
       ]
     }
   }

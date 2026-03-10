@@ -135,7 +135,7 @@ After saving the configuration file, restart the Cline extension or reload VS Co
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "/path/to/your/database.db"
+        "--file", "/path/to/your/database.db"
       ]
     }
   }
@@ -425,7 +425,7 @@ Cline will autonomously query the database, analyze the results, and provide rec
 | `--user` | Yes* | Database username |
 | `--password` | Yes* | Database password |
 | `--database` | Yes* | Database name |
-| `--file-path` | Yes* | SQLite file path (for sqlite type only) |
+| `--file` | Yes* | SQLite file path (for sqlite type only) |
 | `--allow-write` | No | Enable write operations (default: false) |
 | `--oracle-client-path` | No | Oracle Instant Client path (for Oracle 11g) |
 

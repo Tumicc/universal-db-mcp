@@ -157,7 +157,7 @@ require("mcphub").setup({
       args = {
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "/path/to/your/database.db"
+        "--file", "/path/to/your/database.db"
       }
     }
   }
@@ -459,7 +459,7 @@ AI 将检查您的结构并生成适当的代码。
 | `--user` | 是* | 数据库用户名 |
 | `--password` | 是* | 数据库密码 |
 | `--database` | 是* | 数据库名称 |
-| `--file-path` | 是* | SQLite 文件路径（仅 sqlite 类型） |
+| `--file` | 是* | SQLite 文件路径（仅 sqlite 类型） |
 | `--allow-write` | 否 | 启用写操作（默认：false） |
 | `--oracle-client-path` | 否 | Oracle Instant Client 路径（用于 Oracle 11g） |
 

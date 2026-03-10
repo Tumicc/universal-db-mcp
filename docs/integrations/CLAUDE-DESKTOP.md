@@ -83,7 +83,7 @@ Add the following to your `claude_desktop_config.json`:
 | `--user` | Yes* | Database username |
 | `--password` | Yes* | Database password |
 | `--database` | Yes* | Database name |
-| `--file-path` | Yes* | SQLite database file path (for sqlite type only) |
+| `--file` | Yes* | SQLite database file path (for sqlite type only) |
 | `--permission-mode` | No | Permission mode: safe (read-only), readwrite (no delete), full (all operations) |
 | `--permissions` | No | Custom permission list, comma-separated: read,insert,update,delete,ddl |
 | `--danger-allow-write` | No | Enable full write operations (equivalent to --permission-mode full) |
@@ -169,7 +169,7 @@ Add the following to your `claude_desktop_config.json`:
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "/path/to/database.db"
+        "--file", "/path/to/database.db"
       ]
     }
   }

@@ -107,7 +107,7 @@
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "${workspaceFolder}/data/app.db"
+        "--file", "${workspaceFolder}/data/app.db"
       ]
     }
   }

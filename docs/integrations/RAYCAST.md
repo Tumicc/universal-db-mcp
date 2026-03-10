@@ -7,6 +7,7 @@ This guide shows how to integrate Universal Database MCP Server with Raycast.
 Raycast is a blazingly fast, totally extendable launcher for macOS. Starting from version 1.98, Raycast supports the Model Context Protocol (MCP), allowing you to connect AI assistants to external tools and data sources. By integrating Universal Database MCP Server, you can enable Raycast's AI to directly query and analyze your database data, making it easier to explore data, generate reports, and get insights without leaving your launcher.
 
 **Key Benefits:**
+
 - Query databases directly from Raycast's AI chat
 - Get AI assistance for SQL query writing
 - Explore database schema quickly
@@ -125,7 +126,7 @@ After adding the configuration, ensure the MCP server is enabled in the list.
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "/path/to/your/database.db"
+        "--file", "/path/to/your/database.db"
       ]
     }
   }
@@ -376,7 +377,7 @@ The AI will examine your data and provide analytical insights.
 | `--user` | Yes* | Database username |
 | `--password` | Yes* | Database password |
 | `--database` | Yes* | Database name |
-| `--file-path` | Yes* | SQLite file path (for sqlite type only) |
+| `--file` | Yes* | SQLite file path (for sqlite type only) |
 | `--allow-write` | No | Enable write operations (default: false) |
 | `--oracle-client-path` | No | Oracle Instant Client path (for Oracle 11g) |
 

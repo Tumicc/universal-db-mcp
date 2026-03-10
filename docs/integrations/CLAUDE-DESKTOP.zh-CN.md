@@ -74,7 +74,7 @@ node --version
 | `--user` | 是* | 数据库用户名 |
 | `--password` | 是* | 数据库密码 |
 | `--database` | 是* | 数据库名称 |
-| `--file-path` | 是* | SQLite 数据库文件路径（仅 sqlite 类型） |
+| `--file` | 是* | SQLite 数据库文件路径（仅 sqlite 类型） |
 | `--permission-mode` | 否 | 权限模式：safe（只读）、readwrite（读写不删）、full（完全控制） |
 | `--permissions` | 否 | 自定义权限列表，逗号分隔：read,insert,update,delete,ddl |
 | `--danger-allow-write` | 否 | 启用完全写操作（等价于 --permission-mode full） |
@@ -160,7 +160,7 @@ node --version
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "/path/to/database.db"
+        "--file", "/path/to/database.db"
       ]
     }
   }

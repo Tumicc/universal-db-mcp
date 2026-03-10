@@ -203,7 +203,7 @@ main();
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "/path/to/database.db"
+        "--file", "/path/to/database.db"
       ]
     }
   }

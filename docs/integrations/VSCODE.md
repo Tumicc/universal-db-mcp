@@ -121,7 +121,7 @@ After saving the configuration, restart Cline or reload VS Code for the changes 
       "args": [
         "universal-db-mcp",
         "--type", "sqlite",
-        "--file-path", "/path/to/your/database.db"
+        "--file", "/path/to/your/database.db"
       ]
     }
   }
@@ -463,7 +463,7 @@ The AI will examine your schema and generate appropriate code.
 | `--user` | Yes* | Database username |
 | `--password` | Yes* | Database password |
 | `--database` | Yes* | Database name |
-| `--file-path` | Yes* | SQLite file path (for sqlite type only) |
+| `--file` | Yes* | SQLite file path (for sqlite type only) |
 | `--allow-write` | No | Enable write operations (default: false) |
 | `--oracle-client-path` | No | Oracle Instant Client path (for Oracle 11g) |
 
