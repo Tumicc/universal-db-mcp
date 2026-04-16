@@ -6,10 +6,14 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
+import path from 'node:path';
 import type { AppConfig } from '../types/http.js';
 import { ConnectionManager } from '../core/connection-manager.js';
 import { authMiddleware, setupErrorHandler } from './middleware/index.js';
 import { setupRoutes } from './routes/index.js';
+import { SavedTargetRepository } from '../store/saved-target-repository.js';
+import { CryptoService } from '../services/crypto-service.js';
+import { TargetService } from '../services/target-service.js';
 
 /**
  * Create and configure HTTP server
@@ -73,11 +77,18 @@ export async function createHttpServer(config: AppConfig) {
     config.http?.session.cleanupInterval || 300000
   );
 
+  const sqlitePath = process.env.TARGETS_SQLITE_PATH || path.join(process.cwd(), 'data', 'saved-targets.db');
+  const targetRepository = new SavedTargetRepository(sqlitePath);
+  const targetService = new TargetService(
+    targetRepository,
+    new CryptoService(process.env.UNIVERSAL_DB_MASTER_KEY)
+  );
+
   // Store connection manager in fastify instance for access in routes
   fastify.decorate('connectionManager', connectionManager);
 
   // Setup routes
-  await setupRoutes(fastify, connectionManager);
+  await setupRoutes(fastify, connectionManager, targetService);
 
   // Setup error handler
   setupErrorHandler(fastify);
@@ -85,6 +96,7 @@ export async function createHttpServer(config: AppConfig) {
   // Graceful shutdown handler
   fastify.addHook('onClose', async () => {
     await connectionManager.disconnectAll();
+    targetService.close();
   });
 
   return fastify;

@@ -293,7 +293,7 @@ curl http://localhost:3000/api/info
 
 Connect to a database and create a session.
 
-**Request Body**:
+**Request Body (direct connect)**:
 ```json
 {
   "type": "mysql",
@@ -302,40 +302,71 @@ Connect to a database and create a session.
   "user": "root",
   "password": "your_password",
   "database": "mydb",
-  "allowWrite": false,
   "permissionMode": "safe",
-  "permissions": ["read", "insert"]
+  "remember": true,
+  "alias": "mysql-test",
+  "environment": "test",
+  "description": "MySQL test environment"
+}
+```
+
+**Request Body (alias connect)**:
+```json
+{
+  "target": "mysql-test"
 }
 ```
 
 **Parameters**:
-- `type` (string, required): Database type (mysql, postgres, redis, oracle, dm, sqlserver, mongodb, sqlite, kingbase, gaussdb, oceanbase, tidb, clickhouse, polardb, vastbase, highgo, goldendb)
-- `host` (string, required for non-SQLite): Database host
-- `port` (number, required for non-SQLite): Database port
+- `target` (string, optional): Saved target alias. When present, server loads saved connection from local SQLite registry.
+- `alias` (string, optional): Alias name when saving (`remember=true`). Also accepted as alias-connect only when `type` is omitted.
+- `type` (string, required for direct connect): Database type (mysql, postgres, redis, oracle, dm, sqlserver, mongodb, sqlite, kingbase, gaussdb, oceanbase, tidb, clickhouse, polardb, vastbase, highgo, goldendb)
+- `host` (string, required for non-SQLite direct connect): Database host
+- `port` (number, required for non-SQLite direct connect): Database port
 - `user` (string, optional): Username
 - `password` (string, optional): Password
 - `database` (string, optional): Database name
-- `filePath` (string, required for SQLite): SQLite database file path
+- `filePath` (string, required for SQLite direct connect): SQLite database file path
 - `authSource` (string, optional for MongoDB): Authentication database (default: admin)
-- `allowWrite` (boolean, optional): Enable write operations (default: false) - deprecated, use `permissionMode`
-- `permissionMode` (string, optional): Permission mode: `safe` (default), `readwrite`, `full`
+- `allowWrite` (boolean, optional): Backward-compatible write flag
+- `permissionMode` (string, optional): Permission mode: `safe`, `readwrite`, `full`, `custom`
 - `permissions` (array, optional): Custom permissions array: `["read", "insert", "update", "delete", "ddl"]`
+- `remember` (boolean, optional): Save current connection template into local alias registry
+- `environment` (string, optional): `test` or `prod` (used when saving target; defaults by alias suffix `-test/-prod`, otherwise `test`)
+- `description` (string, optional): Human-readable target description
 
-> ⚠️ **Note**: Use camelCase for JSON body (`permissionMode`, `permissions`), not hyphenated names like `permission-mode`.
+> ⚠️ **Note**: Use camelCase for JSON body (`permissionMode`, `remember`), not hyphenated names.
 
-**Request Example**:
+**Permission rules for saved targets**:
+- Saved `test` targets default to `readwrite`.
+- Saved `prod` targets default to `safe`.
+- Alias connect without explicit permission uses target default permission.
+- Alias connect for `prod` rejects explicit permission escalation (for example `permissionMode=full`).
+
+**Request Example (save as `dm-test`)**:
 ```bash
 curl -X POST http://localhost:3000/api/connect \
   -H "X-API-Key: your-secret-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "mysql",
+    "type": "dm",
     "host": "localhost",
-    "port": 3306,
-    "user": "root",
+    "port": 5236,
+    "user": "SYSDBA",
     "password": "password",
-    "database": "testdb"
+    "database": "TESTDB",
+    "remember": true,
+    "alias": "dm-test",
+    "environment": "test"
   }'
+```
+
+**Request Example (connect by alias)**:
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"target": "dm-test"}'
 ```
 
 **Response** (200 OK):
@@ -354,13 +385,13 @@ curl -X POST http://localhost:3000/api/connect \
 }
 ```
 
-**Error Response** (500):
+**Error Response**:
 ```json
 {
   "success": false,
   "error": {
-    "code": "CONNECTION_FAILED",
-    "message": "Access denied for user 'root'@'localhost'"
+    "code": "TARGET_ALIAS_CONFLICT",
+    "message": "连接别名已存在: dm-test"
   },
   "metadata": {
     "timestamp": "2026-01-27T12:00:00.000Z",
@@ -368,6 +399,13 @@ curl -X POST http://localhost:3000/api/connect \
   }
 }
 ```
+
+Common error codes:
+- `CONNECTION_FAILED` (500): Database connection failed
+- `MASTER_KEY_REQUIRED` (400): `UNIVERSAL_DB_MASTER_KEY` missing when saving/decrypting targets
+- `TARGET_NOT_FOUND` (404): Alias not found
+- `TARGET_ALIAS_CONFLICT` (409): Alias already exists
+- `TARGET_PERMISSION_DENIED` (403): Permission escalation blocked (especially for prod targets)
 
 #### POST /api/disconnect
 
@@ -400,6 +438,110 @@ curl -X POST http://localhost:3000/api/disconnect \
     "requestId": "abc123"
   }
 }
+```
+
+#### Saved Targets APIs
+
+Saved targets are persisted in local SQLite (`TARGETS_SQLITE_PATH`, default `./data/saved-targets.db`).
+Sensitive fields (for example `password`/`token`/`secret`) are encrypted using `UNIVERSAL_DB_MASTER_KEY`.
+
+##### GET /api/targets
+
+List all saved target summaries (masked, no plaintext secrets).
+
+```bash
+curl -X GET http://localhost:3000/api/targets \
+  -H "X-API-Key: your-secret-key"
+```
+
+##### GET /api/targets/:alias
+
+Get one saved target summary by alias.
+
+```bash
+curl -X GET http://localhost:3000/api/targets/dm-test \
+  -H "X-API-Key: your-secret-key"
+```
+
+##### PATCH /api/targets/:alias
+
+Update non-sensitive fields.
+
+Supported fields:
+- `description`
+- `environment` (`test` or `prod`)
+- `defaultPermissionMode` (`safe`, `readwrite`, `full`, `custom`)
+
+```bash
+curl -X PATCH http://localhost:3000/api/targets/dm-test \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Dameng test target",
+    "environment": "test",
+    "defaultPermissionMode": "readwrite"
+  }'
+```
+
+> `prod` targets enforce `defaultPermissionMode=safe`.
+
+##### DELETE /api/targets/:alias
+
+Delete a saved target by alias.
+
+```bash
+curl -X DELETE http://localhost:3000/api/targets/dm-test \
+  -H "X-API-Key: your-secret-key"
+```
+
+##### End-to-end Example
+
+1. Save `dm-test`:
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "dm",
+    "host": "127.0.0.1",
+    "port": 5236,
+    "user": "SYSDBA",
+    "password": "******",
+    "database": "TESTDB",
+    "remember": true,
+    "alias": "dm-test",
+    "environment": "test"
+  }'
+```
+
+2. Connect with `dm-test`:
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"target": "dm-test"}'
+```
+
+3. Save `redis-prod`:
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "redis",
+    "host": "127.0.0.1",
+    "port": 6379,
+    "password": "******",
+    "remember": true,
+    "alias": "redis-prod",
+    "environment": "prod"
+  }'
+```
+
+4. List all targets:
+```bash
+curl -X GET http://localhost:3000/api/targets \
+  -H "X-API-Key: your-secret-key"
 ```
 
 ### Query Execution

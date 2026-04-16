@@ -4,6 +4,7 @@
  */
 
 import type { DbConfig } from './adapter.js';
+import type { TargetEnvironment } from './targets.js';
 
 /**
  * HTTP Server Configuration
@@ -63,7 +64,9 @@ export interface AppConfig {
  * Connect Request
  */
 export interface ConnectRequest {
-  type: string;
+  target?: string;
+  alias?: string;
+  type?: string;
   host?: string;
   port?: number;
   user?: string;
@@ -72,8 +75,13 @@ export interface ConnectRequest {
   filePath?: string;
   authSource?: string;
   allowWrite?: boolean;
+  permissionMode?: 'safe' | 'readwrite' | 'full' | 'custom';
+  permissions?: Array<'read' | 'insert' | 'update' | 'delete' | 'ddl'>;
   /** Oracle Instant Client 路径（启用 Thick 模式以支持 11g） */
   oracleClientPath?: string;
+  remember?: boolean;
+  environment?: TargetEnvironment;
+  description?: string;
 }
 
 /**

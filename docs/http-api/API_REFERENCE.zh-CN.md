@@ -293,7 +293,7 @@ curl http://localhost:3000/api/info
 
 连接到数据库并创建会话。
 
-**请求体**:
+**请求体（直连）**:
 ```json
 {
   "type": "mysql",
@@ -302,40 +302,71 @@ curl http://localhost:3000/api/info
   "user": "root",
   "password": "your_password",
   "database": "mydb",
-  "allowWrite": false,
   "permissionMode": "safe",
-  "permissions": ["read", "insert"]
+  "remember": true,
+  "alias": "mysql-test",
+  "environment": "test",
+  "description": "MySQL 测试环境"
+}
+```
+
+**请求体（别名直连）**:
+```json
+{
+  "target": "mysql-test"
 }
 ```
 
 **参数说明**:
-- `type` (字符串, 必需): 数据库类型（mysql, postgres, redis, oracle, dm, sqlserver, mongodb, sqlite, kingbase, gaussdb, oceanbase, tidb, clickhouse, polardb, vastbase, highgo, goldendb）
-- `host` (字符串, 非 SQLite 必需): 数据库主机
-- `port` (数字, 非 SQLite 必需): 数据库端口
+- `target` (字符串, 可选): 已保存连接别名。传入后从本地 SQLite 注册表读取连接模板。
+- `alias` (字符串, 可选): `remember=true` 时保存别名；未传 `type` 时也可作为别名直连参数。
+- `type` (字符串, 直连必需): 数据库类型（mysql, postgres, redis, oracle, dm, sqlserver, mongodb, sqlite, kingbase, gaussdb, oceanbase, tidb, clickhouse, polardb, vastbase, highgo, goldendb）
+- `host` (字符串, 非 SQLite 直连必需): 数据库主机
+- `port` (数字, 非 SQLite 直连必需): 数据库端口
 - `user` (字符串, 可选): 用户名
 - `password` (字符串, 可选): 密码
 - `database` (字符串, 可选): 数据库名称
-- `filePath` (字符串, SQLite 必需): SQLite 数据库文件路径
+- `filePath` (字符串, SQLite 直连必需): SQLite 数据库文件路径
 - `authSource` (字符串, MongoDB 可选): 认证数据库（默认: admin）
-- `allowWrite` (布尔值, 可选): 启用写操作（默认: false）- 已弃用，推荐使用 `permissionMode`
-- `permissionMode` (字符串, 可选): 权限模式：`safe`（默认）、`readwrite`、`full`
+- `allowWrite` (布尔值, 可选): 向后兼容写入标记
+- `permissionMode` (字符串, 可选): 权限模式：`safe`、`readwrite`、`full`、`custom`
 - `permissions` (数组, 可选): 自定义权限数组：`["read", "insert", "update", "delete", "ddl"]`
+- `remember` (布尔值, 可选): 是否保存为可复用连接别名
+- `environment` (字符串, 可选): `test` 或 `prod`（保存时使用；默认根据 `-test/-prod` 后缀推断，否则为 `test`）
+- `description` (字符串, 可选): 连接描述
 
-> ⚠️ **注意**：JSON Body 使用驼峰命名（`permissionMode`），不是连字符命名如 `permission-mode`。
+> ⚠️ **注意**：JSON Body 使用驼峰命名（`permissionMode`、`remember`）。
 
-**请求示例**:
+**已保存别名的权限规则**:
+- `test` 默认 `readwrite`
+- `prod` 默认 `safe`
+- 通过别名连接且未显式传权限时，使用目标默认权限
+- `prod` 别名默认拒绝升权请求（如 `permissionMode=full`）
+
+**请求示例（首次连接并保存为 `dm-test`）**:
 ```bash
 curl -X POST http://localhost:3000/api/connect \
   -H "X-API-Key: your-secret-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "mysql",
+    "type": "dm",
     "host": "localhost",
-    "port": 3306,
-    "user": "root",
+    "port": 5236,
+    "user": "SYSDBA",
     "password": "password",
-    "database": "testdb"
+    "database": "TESTDB",
+    "remember": true,
+    "alias": "dm-test",
+    "environment": "test"
   }'
+```
+
+**请求示例（通过 `dm-test` 直连）**:
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"target": "dm-test"}'
 ```
 
 **响应** (200 OK):
@@ -354,13 +385,13 @@ curl -X POST http://localhost:3000/api/connect \
 }
 ```
 
-**错误响应** (500):
+**错误响应**:
 ```json
 {
   "success": false,
   "error": {
-    "code": "CONNECTION_FAILED",
-    "message": "用户 'root'@'localhost' 访问被拒绝"
+    "code": "TARGET_ALIAS_CONFLICT",
+    "message": "连接别名已存在: dm-test"
   },
   "metadata": {
     "timestamp": "2026-01-27T12:00:00.000Z",
@@ -368,6 +399,13 @@ curl -X POST http://localhost:3000/api/connect \
   }
 }
 ```
+
+常见错误码：
+- `CONNECTION_FAILED` (500): 数据库连接失败
+- `MASTER_KEY_REQUIRED` (400): 保存/解密别名时缺少 `UNIVERSAL_DB_MASTER_KEY`
+- `TARGET_NOT_FOUND` (404): 别名不存在
+- `TARGET_ALIAS_CONFLICT` (409): 别名冲突
+- `TARGET_PERMISSION_DENIED` (403): 权限升权被拒绝（尤其是 prod 别名）
 
 #### POST /api/disconnect
 
@@ -400,6 +438,110 @@ curl -X POST http://localhost:3000/api/disconnect \
     "requestId": "abc123"
   }
 }
+```
+
+#### Saved Targets 接口
+
+Saved targets 会持久化在本地 SQLite（`TARGETS_SQLITE_PATH`，默认 `./data/saved-targets.db`）。
+敏感字段（如 `password`/`token`/`secret`）使用 `UNIVERSAL_DB_MASTER_KEY` 加密后落库。
+
+##### GET /api/targets
+
+获取所有已保存 target 的脱敏摘要（不返回明文密钥）。
+
+```bash
+curl -X GET http://localhost:3000/api/targets \
+  -H "X-API-Key: your-secret-key"
+```
+
+##### GET /api/targets/:alias
+
+按别名获取单个 target 的脱敏详情。
+
+```bash
+curl -X GET http://localhost:3000/api/targets/dm-test \
+  -H "X-API-Key: your-secret-key"
+```
+
+##### PATCH /api/targets/:alias
+
+更新非敏感字段。
+
+支持字段：
+- `description`
+- `environment`（`test` 或 `prod`）
+- `defaultPermissionMode`（`safe`、`readwrite`、`full`、`custom`）
+
+```bash
+curl -X PATCH http://localhost:3000/api/targets/dm-test \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "达梦测试连接",
+    "environment": "test",
+    "defaultPermissionMode": "readwrite"
+  }'
+```
+
+> `prod` target 会强制 `defaultPermissionMode=safe`。
+
+##### DELETE /api/targets/:alias
+
+删除已保存 target。
+
+```bash
+curl -X DELETE http://localhost:3000/api/targets/dm-test \
+  -H "X-API-Key: your-secret-key"
+```
+
+##### 端到端示例
+
+1. 首次连接并保存为 `dm-test`：
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "dm",
+    "host": "127.0.0.1",
+    "port": 5236,
+    "user": "SYSDBA",
+    "password": "******",
+    "database": "TESTDB",
+    "remember": true,
+    "alias": "dm-test",
+    "environment": "test"
+  }'
+```
+
+2. 通过 `dm-test` 直连：
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"target": "dm-test"}'
+```
+
+3. 保存 `redis-prod`：
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "redis",
+    "host": "127.0.0.1",
+    "port": 6379,
+    "password": "******",
+    "remember": true,
+    "alias": "redis-prod",
+    "environment": "prod"
+  }'
+```
+
+4. 查看 targets 列表：
+```bash
+curl -X GET http://localhost:3000/api/targets \
+  -H "X-API-Key: your-secret-key"
 ```
 
 ### 查询执行

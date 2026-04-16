@@ -34,6 +34,10 @@ export async function startHttpServer(config: AppConfig): Promise<void> {
     console.log('   GET  /api/info            - Service information');
     console.log('   POST /api/connect         - Connect to database');
     console.log('   POST /api/disconnect      - Disconnect from database');
+    console.log('   GET  /api/targets         - List saved targets');
+    console.log('   GET  /api/targets/:alias  - Get saved target');
+    console.log('   PATCH /api/targets/:alias - Update saved target');
+    console.log('   DELETE /api/targets/:alias- Delete saved target');
     console.log('   POST /api/query           - Execute query');
     console.log('   POST /api/execute         - Execute write operation');
     console.log('   GET  /api/tables          - List tables');
