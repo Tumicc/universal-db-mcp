@@ -55,6 +55,8 @@ AI: 让我帮你查询一下...
 - **适配 55+ 平台** - 支持 Claude Desktop、Cursor、VS Code、ChatGPT、Dify 等 [50+ 平台](#-支持的平台)
 - **灵活架构** - 2 种启动模式（stdio/http），4 种接入方式：MCP stdio、MCP SSE、MCP Streamable HTTP、REST API
 - **安全第一** - 默认只读模式，防止意外的数据修改
+- **连接别名注册表** - 支持保存并复用连接别名（`dm-test`、`dm-prod`、`redis-test`、`redis-prod`）
+- **环境感知权限** - `test` 默认 `readwrite`，`prod` 默认 `safe`（只读）
 - **智能缓存** - Schema 缓存支持可配置的 TTL，性能极速
 - **批量查询优化** - 大型数据库的 Schema 获取速度提升高达 100 倍
 - **Schema 增强** - 表注释、隐式关系推断，提升 Text2SQL 准确性
@@ -117,6 +119,8 @@ npm install -g universal-db-mcp
 export MODE=http
 export HTTP_PORT=3000
 export API_KEYS=your-secret-key
+export UNIVERSAL_DB_MASTER_KEY=your-strong-master-key  # remember/alias 功能必需
+# export TARGETS_SQLITE_PATH=./data/saved-targets.db    # 可选，默认如上
 
 # 启动服务
 npx universal-db-mcp
@@ -126,6 +130,42 @@ npx universal-db-mcp
 # 测试 API
 curl http://localhost:3000/api/health
 ```
+
+### Saved Targets（连接别名注册表）
+
+首次连接并保存别名：
+
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "dm",
+    "host": "127.0.0.1",
+    "port": 5236,
+    "user": "SYSDBA",
+    "password": "your_password",
+    "database": "TESTDB",
+    "remember": true,
+    "alias": "dm-test",
+    "environment": "test"
+  }'
+```
+
+后续通过别名直连：
+
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"target":"dm-test"}'
+```
+
+管理已保存 target：
+- `GET /api/targets`
+- `GET /api/targets/:alias`
+- `PATCH /api/targets/:alias`
+- `DELETE /api/targets/:alias`
 
 ### MCP SSE 模式（Dify 和远程访问）
 
@@ -300,6 +340,13 @@ npx universal-db-mcp --type mysql --permission-mode full ...
 - 使用专用的只读数据库账号
 - 通过 VPN 或跳板机连接
 - 定期审计查询日志
+
+### Saved Target 安全说明
+
+- 已保存连接持久化到本地 SQLite（`TARGETS_SQLITE_PATH`，默认 `./data/saved-targets.db`）。
+- 敏感字段（`password`/`token`/`secret`）使用 `UNIVERSAL_DB_MASTER_KEY` 加密后落库。
+- 如果缺少 `UNIVERSAL_DB_MASTER_KEY`，`remember=true` 保存和别名解密会明确报错，不会降级为明文存储。
+- 生产别名默认受保护：`prod` 连接默认 `safe`，不会因为保存别名而自动放宽权限。
 
 ## 🔌 支持的平台
 

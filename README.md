@@ -56,6 +56,8 @@ AI: Let me query that for you...
 - **55+ Platform Integrations** - Works with Claude Desktop, Cursor, VS Code, ChatGPT, Dify, and [50+ other platforms](#-supported-platforms)
 - **Flexible Architecture** - 2 startup modes (stdio/http) with 4 access methods: MCP stdio, MCP SSE, MCP Streamable HTTP, and REST API
 - **Security First** - Read-only mode by default prevents accidental data modifications
+- **Saved Targets Registry** - Save reusable connection aliases (`dm-test`, `dm-prod`, `redis-test`, `redis-prod`) for one-click reconnect
+- **Environment-Aware Permissions** - `test` targets default to `readwrite`, `prod` targets default to `safe` (read-only)
 - **Intelligent Caching** - Schema caching with configurable TTL for blazing-fast performance
 - **Batch Query Optimization** - Up to 100x faster schema retrieval for large databases
 - **Schema Enhancement** - Table comments, implicit relationship inference for better Text2SQL accuracy
@@ -118,6 +120,8 @@ Restart Claude Desktop and start asking questions:
 export MODE=http
 export HTTP_PORT=3000
 export API_KEYS=your-secret-key
+export UNIVERSAL_DB_MASTER_KEY=your-strong-master-key  # required for remember/alias features
+# export TARGETS_SQLITE_PATH=./data/saved-targets.db    # optional, default shown
 
 # Start the server
 npx universal-db-mcp
@@ -127,6 +131,42 @@ npx universal-db-mcp
 # Test the API
 curl http://localhost:3000/api/health
 ```
+
+### Saved Targets (Alias Registry)
+
+Save a connection as an alias:
+
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "dm",
+    "host": "127.0.0.1",
+    "port": 5236,
+    "user": "SYSDBA",
+    "password": "your_password",
+    "database": "TESTDB",
+    "remember": true,
+    "alias": "dm-test",
+    "environment": "test"
+  }'
+```
+
+Reconnect by alias only:
+
+```bash
+curl -X POST http://localhost:3000/api/connect \
+  -H "X-API-Key: your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"target":"dm-test"}'
+```
+
+Manage saved targets:
+- `GET /api/targets`
+- `GET /api/targets/:alias`
+- `PATCH /api/targets/:alias`
+- `DELETE /api/targets/:alias`
 
 ### MCP SSE Mode (Dify and Remote Access)
 
@@ -301,6 +341,13 @@ npx universal-db-mcp --type mysql --permission-mode full ...
 - Use dedicated read-only database accounts
 - Connect through VPN or bastion hosts
 - Regularly audit query logs
+
+### Saved Target Security
+
+- Saved targets are persisted in local SQLite (`TARGETS_SQLITE_PATH`, default: `./data/saved-targets.db`).
+- Sensitive fields (`password`/`token`/`secret`) are encrypted at rest with `UNIVERSAL_DB_MASTER_KEY`.
+- If `UNIVERSAL_DB_MASTER_KEY` is missing, `remember=true` and alias decryption fail explicitly (no plaintext fallback).
+- Production aliases are protected by default: `prod` target connections use `safe` unless your policy explicitly allows otherwise.
 
 ## 🔌 Supported Platforms
 
