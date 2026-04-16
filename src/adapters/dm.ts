@@ -103,6 +103,16 @@ export class DMAdapter implements DbAdapter {
     }
   }
 
+  private buildConnectionUri(): string {
+    const user = encodeURIComponent(this.config.user ?? '');
+    const password = encodeURIComponent(this.config.password ?? '');
+    const auth = this.config.user ? `${user}:${password}@` : '';
+    const host = this.config.host;
+    const port = this.config.port || 5236;
+    const schema = this.config.database ? `?schema=${encodeURIComponent(this.config.database)}` : '';
+    return `dm://${auth}${host}:${port}${schema}`;
+  }
+
   /**
    * 连接到达梦数据库
    */
@@ -110,18 +120,8 @@ export class DMAdapter implements DbAdapter {
     try {
       const DM = await loadDMDB();
 
-      // 达梦数据库连接配置
-      const connectionConfig = {
-        host: this.config.host,
-        port: this.config.port || 5236, // 达梦默认端口
-        user: this.config.user,
-        password: this.config.password,
-        database: this.config.database,
-        // 禁用消息加密以避免 OpenSSL 3.0 兼容性问题
-        // 如果需要加密连接，请确保达梦数据库服务器配置了兼容的加密算法
-        cipherPath: '',
-        loginEncrypt: false,
-      };
+      // 使用 URI 连接方式，和官方示例/独立脚本保持一致
+      const connectionConfig = this.buildConnectionUri();
 
       this.connection = await DM.getConnection(connectionConfig);
       this.connectionConfig = connectionConfig;
@@ -135,8 +135,8 @@ export class DMAdapter implements DbAdapter {
 
       if (errorMessage.includes('用户名') || errorMessage.includes('密码')) {
         throw new Error('达梦数据库连接失败: 用户名或密码无效');
-      } else if (errorMessage.includes('连接') || errorMessage.includes('网络')) {
-        throw new Error('达梦数据库连接失败: 无法连接到数据库服务器，请检查主机地址和端口');
+      } else if (errorMessage.includes('消息加密失败') || errorMessage.includes('error:0308010C')) {
+        throw new Error('达梦数据库连接失败: 消息加密失败（OpenSSL 兼容问题）。请设置 NODE_OPTIONS=--openssl-legacy-provider 后重试。');
       }
 
       throw new Error(`达梦数据库连接失败: ${errorMessage}`);
